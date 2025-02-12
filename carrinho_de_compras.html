@@ -29,17 +29,15 @@
         <!-- Formulário de Registro -->
         <form id="formularioRegistro" class="d-none mt-3 d-flex flex-column align-items-center">
             <h2>Cadastre - se</h2>
-            <label class="fw-bold">Usuário</label>
-            <input type="text" name="usuarioRegistro" id="usuarioRegistro" placeholder="Insira o usuário">
 
             <label class="fw-bold">Email</label>
             <input type="email" name="emailRegistro" id="emailRegistro" placeholder="Insira o email">
-    
+
+            <label class="fw-bold">Usuário</label>
+            <input type="text" name="usuarioRegistro" id="usuarioRegistro" placeholder="Insira o usuário">
+
             <label class="fw-bold">Senha</label>
             <input type="password" name="senhaRegistro" id="senhaRegistro" placeholder="Insira a senha">
-    
-            <label class="fw-bold">Confirmar Senha</label>
-            <input type="password" name="confirmarSenha" id="confirmarSenha" placeholder="Confirme a senha">
     
             <input class="fw-bold" type="button" value="Registrar" onclick="registrarUsuario()">
             <input class="fw-bold" type="button" value="Cancelar" onclick="cancelarRegistro()">
@@ -83,59 +81,47 @@
     </div>
 
     <script>
-        // Função para registrar o usuário no localStorage
-        function registrarUsuario() {
-            const usuarioRegistro = document.getElementById("usuarioRegistro").value;
-            const emailRegistro = document.getElementById("emailRegistro").value;
-            const senhaRegistro = document.getElementById("senhaRegistro").value;
-            const confirmarSenha = document.getElementById("confirmarSenha").value;
+        // Função para registrar o usuário
+            function registrarUsuario() {
+                // Pega os dados dos campos do formulário
+                const usuarioRegistro = document.getElementById("usuarioRegistro").value;
+                const emailRegistro = document.getElementById("emailRegistro").value;
+                const senhaRegistro = document.getElementById("senhaRegistro").value;
 
-            // Verificar se todos os campos foram preenchidos
-            if (!usuarioRegistro || !emailRegistro || !senhaRegistro || !confirmarSenha) {
-                alert("Por favor, preencha todos os campos.");
-                return;
-            }
+                // Verifica se todos os campos estão preenchidos
+                if (!email || !username || !password) {
+                    alert("Por favor, preencha todos os campos.");
+                    return;
+                };
 
-            // Validar se as senhas coincidem
-            if (senhaRegistro !== confirmarSenha) {
-                alert("As senhas não coincidem.");
-                return;
-            }
+                // Prepara os dados para enviar no formato JSON
+                const dadosUsuario = {
+                    email: email,
+                    username: username,
+                    password: password
+                };
 
-            // Recuperar usuários do localStorage
-            let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+                // Envia a requisição para registrar o novo usuário
+                fetch('https://fakestoreapi.com/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dadosUsuario)
+                });
+                .then(res => res.json())  // Resposta em JSON
+                .then(json => {
+                    console.log(json);  // Exibe a resposta da API
+                    alert("Usuário registrado com sucesso!");
+                    // Limpa o formulário
+                    document.getElementById("formRegistrarUsuario").reset();
+                });
+                .catch(error => {
+                    console.error('Erro ao registrar o usuário:', error);
+                    alert("Erro ao registrar o usuário.");
+                });
+            };
 
-            // Verificar se o nome de usuário já existe
-            if (usuarios.some(usuario => usuario.nome === usuarioRegistro)) {
-                alert("Este nome de usuário já existe.");
-                return;
-            }
-
-            // Atribuindo cargo ao usuário (definindo o primeiro usuário como "administrador")
-            const cargo = usuarios.length === 0 ? "administrador" : "cliente"; // O primeiro usuário será administrador
-
-            // Adicionar novo usuário ao array de usuários
-            usuarios.push({
-                nome: usuarioRegistro,
-                email: emailRegistro,
-                senha: senhaRegistro,
-                cargo: cargo
-            });
-
-            // Salvar os dados de usuários no localStorage
-            localStorage.setItem("usuarios", JSON.stringify(usuarios));
-
-            alert("Usuário registrado com sucesso!");
-
-            // Limpar os campos após o registro
-            document.getElementById("usuarioRegistro").value = '';
-            document.getElementById("emailRegistro").value = '';
-            document.getElementById("senhaRegistro").value = '';
-            document.getElementById("confirmarSenha").value = '';
-
-            // Voltar para o formulário de login
-            cancelarRegistro();
-        }
 
         // Função para efetuar o login
         function efetuarLogin() {
@@ -148,34 +134,80 @@
                 return;
             }
 
-            // Recupera usuários do localStorage
-            let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+            // Envia a requisição para a API de autenticação
+            fetch('https://fakestoreapi.com/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: usuario,
+                    password: senha
+                });
+            });
+            .then(res => res.json());
+            .then(json => {
+                // Verifica se o token está presente na resposta
+                if (json.token) {
+                    localStorage.setItem("usuarioLogado", JSON.stringify({
+                        nome: usuario,
+                        token: json.token
+                    }));
 
-            // Verifica se o usuário existe e se a senha está correta
-            const usuarioValido = usuarios.find(u => u.nome === usuario && u.senha === senha);
+                    // Esconde o formulário de login e mostra as áreas do sistema
+                    formularioLogin.classList.add("d-none");
+                    alert('Login Efetuado com sucesso!');
 
-            if (usuarioValido) {
-                formularioLogin.classList.add("d-none");
-                alert('Login Efetuado com sucesso!');
-
-                // Verifica se o cargo é "administrador" e libera o painel
-                if (usuarioValido.cargo === "administrador") {
+                    // Libera painel de administrador ou catálogo para cliente
                     formularioNovosProdutos.classList.remove("d-none");
-                    formularioCatalogo.classList.add("d-none");
-                } else if (usuarioValido.cargo === "cliente") {
                     formularioCatalogo.classList.remove("d-none");
-                    resumoDoCarrinho.classList.remove("d-none");
-                    exibirCatalogo();  // Aqui, você garante que o catálogo seja exibido.
+                } else {
+                    alert('Usuário ou senha estão incorretos...');
                 }
-
-                localStorage.setItem("usuarioLogado", JSON.stringify(usuarioValido));
-
-                // Armazenar o e-mail para uso posterior na notificação
-                localStorage.setItem("usuarioLogadoEmail", usuarioValido.email);
-            } else {
-                alert('Usuário ou senha estão incorretos...');
-            }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                alert('Erro ao autenticar o usuário.');
+            });
         };
+
+        function acessarRecursoProtegido() {
+            const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+
+            if (!usuarioLogado || !usuarioLogado.token) {
+                alert("Você não está autenticado!");
+                return;
+            };
+
+            const token = usuarioLogado.token;
+
+            fetch('https://fakestoreapi.com/protected-resource', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(json => {
+                console.log("Dados do recurso protegido:", json);
+            })
+            .catch(error => {
+                console.error('Erro ao acessar o recurso protegido:', error);
+            });
+        };
+
+        function efetuarLogout() {
+            localStorage.removeItem("usuarioLogado");
+            formularioLogin.classList.remove("d-none");
+
+            formularioNovosProdutos.classList.add("d-none");
+            formularioCatalogo.classList.add("d-none");
+
+            alert('Você foi desconectado.');
+        };
+
+
+
 
         let formularioLogin = document.getElementById("formularioLogin");
         let formularioRegistro = document.getElementById("formularioRegistro");
@@ -486,6 +518,7 @@
             const apiToken = 'ar8spu9aocqt1xycjyfhmpm2mdpexv'; // Substitua pelo seu API Token
 
             const url = 'https://api.pushover.net/1/messages.json';
+            
 
             try {
                 const response = await fetch(url, {
@@ -499,6 +532,7 @@
                         message: mensagem,
                     }),
                 });
+
 
                 if (!response.ok) {
                     throw new Error(`Erro na requisição: ${response.status} - ${response.statusText}`);
