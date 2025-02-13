@@ -426,8 +426,3 @@ if (produtoId) {
     // Lógica para carregar as informações do produto com o ID
     console.log("ID do produto:", produtoId);
 }
-
-
-
-
-
