@@ -275,13 +275,13 @@ function exibirProdutos() {
                     // Recuperando o ID do produto ao clicar no botão
                     const produtoId = this.getAttribute('data-id');
                     if (produtoId) {
-                        // Se o ID for encontrado, abrir o formulário de edição
-                        abrirFormularioEdicao(produtoId);
+                        abrirFormularioEdicao(produtoId); // Passa o ID diretamente
                     } else {
                         console.error("ID do produto não encontrado.");
                     }
                 });
             });
+
         })
         .catch(error => {
             console.error("Erro ao carregar os produtos:", error);
@@ -299,10 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // Função para abrir a página de edição do produto
-function abrirFormularioEdicao() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const produtoId = urlParams.get('id');
-
+function abrirFormularioEdicao(produtoId) {
     if (!produtoId) {
         alert("ID do produto não encontrado.");
         return;
@@ -333,6 +330,7 @@ function abrirFormularioEdicao() {
         mostrarFormularioEdicao(produto);
     }
 }
+
 
 // Função para preencher o formulário de edição
 function mostrarFormularioEdicao(produto) {
@@ -426,3 +424,8 @@ if (produtoId) {
     // Lógica para carregar as informações do produto com o ID
     console.log("ID do produto:", produtoId);
 }
+
+
+
+
+
