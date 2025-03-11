@@ -1,126 +1,138 @@
-//Função para mostrar o formulário de registro
-function mostrarFormularioRegistro(){
-    const formRegistro = document.getElementById("formRegistro");
+// Constantes para URLs da API
+const API_URL = 'https://fakestoreapi.com';
+const AFTERSHIP_API_URL = 'https://api.aftership.com/v4';
+const AFTERSHIP_API_KEY = 'SUA_CHAVE_DE_API_AQUI'; // Substitua pela sua chave de API do AfterShip
+const USUARIOS_LOCAIS_KEY = 'usuarios';
+const USUARIO_LOGADO_KEY = 'usuarioLogado';
+
+// Função para enviar notificação de confirmação de pedido via AfterShip
+function enviarNotificacaoAfterShip(email, mensagem) {
+    fetch(`${AFTERSHIP_API_URL}/notifications`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'aftership-api-key': AFTERSHIP_API_KEY
+        },
+        body: JSON.stringify({
+            notification: {
+                emails: [email], // Lista de e-mails para notificação
+                message: mensagem // Mensagem personalizada
+            }
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Erro ao enviar notificação.");
+        return response.json();
+    })
+    .then(data => {
+        console.log("Notificação enviada com sucesso:", data);
+    })
+    .catch(error => {
+        console.error("Erro ao enviar notificação:", error);
+    });
+}
+
+// Função para mostrar o formulário de registro
+function mostrarFormularioRegistro() {
     window.location.href = "registro.html";
 }
 
 // Função para registrar novo usuário
-function registrarUsuario() {
-    event.preventDefault(); // Evita o comportamento padrão do formulário
+function registrarUsuario(event) {
+    event.preventDefault();
 
-    // Capturando os valores do formulário
-    const usuario = document.getElementById("usuario").value;
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
-    const confirmarSenha = document.getElementById("confirmarSenha").value;
+    const usuario = document.getElementById("usuario").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+    const confirmarSenha = document.getElementById("confirmarSenha").value.trim();
     const cargo = document.getElementById("cargo").value;
 
-    // Verifica se as senhas coincidem
-    if (senha !== confirmarSenha) {
-        alert("As senhas não coincidem. Por favor, tente novamente.");
+    // Validações
+    if (!usuario || !email || !senha || !confirmarSenha || !cargo) {
+        alert("Por favor, preencha todos os campos.");
         return;
     }
 
-    // Cria o objeto do usuário para enviar à API
+    if (senha !== confirmarSenha) {
+        alert("As senhas não coincidem.");
+        return;
+    }
+
+    if (!validarEmail(email)) {
+        alert("Por favor, insira um email válido.");
+        return;
+    }
+
     const novoUsuario = {
-        email: email,
+        email,
         username: usuario,
         password: senha,
-        cargo: cargo
+        cargo
     };
 
-    // Enviar requisição para registrar o usuário na API
-    fetch('https://fakestoreapi.com/users', {
+    // Registrar na API
+    fetch(`${API_URL}/users`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(novoUsuario)
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error("Erro na requisição: " + response.statusText);
-        }
+        if (!response.ok) throw new Error("Erro ao registrar usuário.");
         return response.json();
     })
     .then(data => {
-        console.log("Usuário registrado com sucesso:", data);
         alert(`Usuário registrado como ${cargo} com sucesso!`);
 
-        // Recupera a lista de usuários do localStorage
-        let usuarios = JSON.parse(localStorage.getItem('usuarios'));
-
-        // Verifica se a lista de usuários não é um array
-        if (!Array.isArray(usuarios)) {
-            usuarios = []; // Caso não seja um array
-        }
-
-        // Adicionar o novo usuário à lista
+        // Salvar no localStorage
+        const usuarios = JSON.parse(localStorage.getItem(USUARIOS_LOCAIS_KEY)) || [];
         usuarios.push(novoUsuario);
+        localStorage.setItem(USUARIOS_LOCAIS_KEY, JSON.stringify(usuarios));
 
-        // Armazenar a lista de usuários no localStorage
-        localStorage.setItem('usuarios', JSON.stringify(usuarios));
-
-        // Redireciona o usuário para a tela de login
-        window.location.href = "index.html"; // redireciona-se para o login
-
-        document.getElementById("formRegistro").reset(); // Limpa o formulário após o registro
+        // Redirecionar para login
+        window.location.href = "index.html";
     })
     .catch(error => {
-        console.error("Erro ao registrar o usuário:", error);
-        alert("Erro ao registrar o usuário. Tente novamente mais tarde.");
+        console.error("Erro:", error);
+        alert("Erro ao registrar usuário. Tente novamente.");
     });
 }
 
-
-// Função para voltar ao formulário de login
-function cancelarRegistro() {
-    window.location.href = "index.html";
-}
-
-// Função para efetuar o login
+// Função para efetuar login
 function efetuarLogin() {
     const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value;
+    const senha = document.getElementById("senha").value.trim();
 
-    // Verificar se os campos estão preenchidos
     if (!usuario || !senha) {
         alert("Por favor, preencha todos os campos.");
         return;
     }
 
-    // Verificar se o usuário existe no localStorage
-    const usuarioRegistrado = JSON.parse(localStorage.getItem("usuarios")) || [];
-
-    // Verifica se o usuário registrado existe na lista
-    const usuarioEncontrado = usuarioRegistrado.find(user => user.username === usuario);
+    const usuarios = JSON.parse(localStorage.getItem(USUARIOS_LOCAIS_KEY)) || [];
+    const usuarioEncontrado = usuarios.find(user => user.username === usuario && user.password === senha);
 
     if (!usuarioEncontrado) {
-        alert("Nenhum usuário registrado encontrado.");
+        alert("Usuário ou senha incorretos.");
         return;
     }
 
-    // Verifica se as credenciais estão corretas
-    if (senha === usuarioEncontrado.password) {
-        alert('Login efetuado com sucesso!');
+    // Salvar usuário logado
+    localStorage.setItem(USUARIO_LOGADO_KEY, JSON.stringify({
+        nome: usuarioEncontrado.username,
+        cargo: usuarioEncontrado.cargo
+    }));
 
-        // Armazena usuário no localStorage com token
-        localStorage.setItem("usuarioLogado", JSON.stringify({
-            nome: usuario,
-            cargo: usuarioEncontrado.cargo
-        }));
-
-        console.log("Usuário logado:", JSON.parse(localStorage.getItem("usuarioLogado")));
-
-        // Redirecionar com base no tipo de usuário
-        if (usuarioEncontrado.cargo === "administrador") {
-            window.location.href = "painelAdmin.html"; // Redirecionamento para painel de admin
-        } else {
-            window.location.href = "catalogo.html"; // Redirecionamento para catálogo (clientes)
-        }
+    // Redirecionar
+    if (usuarioEncontrado.cargo === "administrador") {
+        window.location.href = "painelAdmin.html";
     } else {
-        alert('Usuário ou senha incorretos.');
+        window.location.href = "catalogo.html";
     }
+}
+
+// Função para validar email
+function validarEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
 }
 
 
@@ -163,140 +175,159 @@ function efetuarLogout() {
     window.location.href = "index.html"; // Redireciona para a página de login após logout
 }
 
+
+
 /* FUNÇÕES DO PAINEL ADMINISTRATIVO, PARA ADICIONAR, EDITAR E REMOVER PRODUTOS */
 
 // Função para adicionar produto
+// Função para adicionar produto (admin)
 function adicionarProduto() {
-    const nomeDoProduto = document.getElementById("nomeDoProduto").value;
-    const descricaoDoProduto = document.getElementById("descricaoDoProduto").value;
-    const precoDoProduto = document.getElementById("precoDoProduto").value;
-    const statusDoProduto = document.getElementById("statusDoProduto").value;
+    const nome = document.getElementById("nomeDoProduto").value.trim();
+    const descricao = document.getElementById("descricaoDoProduto").value.trim();
+    const preco = parseFloat(document.getElementById("precoDoProduto").value);
+    const status = document.getElementById("statusDoProduto").value === "1";
 
-    // Verificar campos vazios
-    if (!nomeDoProduto || !descricaoDoProduto || !precoDoProduto || !statusDoProduto) {
-        alert("Por favor, preencha todos os campos do produto.");
+    if (!nome || !descricao || isNaN(preco) || preco <= 0) {
+        alert("Por favor, preencha todos os campos corretamente.");
         return;
     }
 
-    if (precoDoProduto <= 0 || isNaN(precoDoProduto)) {
-        alert("Por favor, insira um preço válido.");
-        return;
-    }
-
-    // Criar o objeto do produto
     const produto = {
-        title: nomeDoProduto,
-        description: descricaoDoProduto,
-        price: parseFloat(precoDoProduto),
-        availability: statusDoProduto === "1" // Verifica se o status é "1" (Disponível)
+        title: nome,
+        description: descricao,
+        price: preco,
+        availability: status
     };
 
-    // Fazer a requisição POST para a API
-    fetch('https://fakestoreapi.com/products', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+    fetch(`${API_URL}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(produto)
     })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao adicionar o produto na API');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log("Produto adicionado:", data);
-            alert("Produto adicionado com sucesso!");
-
-            // Armazenar o produto localmente
-            const produtosLocais = JSON.parse(localStorage.getItem("produtosAdicionados")) || [];
-            produtosLocais.push({ ...data, availability: produto.availability }); // Inclui a disponibilidade
-            localStorage.setItem("produtosAdicionados", JSON.stringify(produtosLocais));
-
-            // Atualizar a lista de produtos
-            exibirProdutos();
-
-            // Limpar os campos do formulário
-            document.getElementById("nomeDoProduto").value = '';
-            document.getElementById("descricaoDoProduto").value = '';
-            document.getElementById("precoDoProduto").value = '';
-            document.getElementById("statusDoProduto").value = '';
-        })
-        .catch(error => {
-            console.error("Erro ao adicionar o produto:", error);
-            alert("Erro ao adicionar o produto. Por favor, tente novamente.");
-        });
+    .then(response => response.json())
+    .then(data => {
+        alert("Produto adicionado com sucesso!");
+        exibirProdutos();
+    })
+    .catch(error => {
+        console.error("Erro:", error);
+        alert("Erro ao adicionar produto.");
+    });
 }
 
-// Função para exibir a lista de produtos
+// Função para adicionar produto ao carrinho
+function adicionarAoCarrinho(idProduto) {
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+    const produto = produtos.find(p => p.id === idProduto);
+
+    if (produto) {
+        const itemExistente = carrinho.find(item => item.id === idProduto);
+        if (itemExistente) {
+            itemExistente.quantidade++;
+        } else {
+            carrinho.push({ ...produto, quantidade: 1 });
+        }
+        localStorage.setItem("carrinho", JSON.stringify(carrinho));
+        alert("Produto adicionado ao carrinho!");
+    } else {
+        alert("Produto não encontrado.");
+    }
+}
+
+// Função para exibir produtos
 function exibirProdutos() {
-    const listaDeProdutosNovos = document.getElementById("listaDeProdutosNovos");
-    listaDeProdutosNovos.innerHTML = ''; // Limpar lista antes de exibir os novos produtos
+    const listaProdutos = document.getElementById("lista-produtos");
+    listaProdutos.innerHTML = "";
 
-    const produtosLocais = JSON.parse(localStorage.getItem("produtosAdicionados")) || [];
-
-    fetch('https://fakestoreapi.com/products')
-        .then(res => res.json())
-        .then(produtosAPI => {
-            const produtosCombinados = [...produtosAPI, ...produtosLocais];
-
-            produtosCombinados.forEach(produto => {
-                const item = document.createElement('div');
-                item.classList.add('col-12', 'col-md-6', 'col-lg-3', 'mb-4');
-
-                // Classe para disponibilidade
-                const statusClasse = produto.availability ? "text-success" : "text-danger";
-
-                // Estrutura do produto
+    fetch(`${API_URL}/products`)
+        .then(response => response.json())
+        .then(produtos => {
+            produtos.forEach(produto => {
+                const item = document.createElement("div");
                 item.innerHTML = `
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">${produto.title}</h5>
-                            <p class="card-text"><strong>Descrição:</strong> ${produto.description}</p>
-                            <p class="card-text"><strong>Preço:</strong> R$ ${produto.price.toFixed(2)}</p>
-                            <p class="card-text">
-                                <strong>Disponibilidade:</strong> <span class="${statusClasse}">${
-                                    produto.availability ? "Disponível" : "Indisponível"
-                                }</span>
-                            </p>
-                            <button class="btn btn-primary btn-sm editar-produto" data-id="${produto.id}">Editar</button>
-                        </div>
-                    </div>
+                    <h3>${produto.title}</h3>
+                    <p>${produto.description}</p>
+                    <p>Preço: R$ ${produto.price.toFixed(2)}</p>
+                    <button onclick="adicionarAoCarrinho(${produto.id})">Adicionar ao Carrinho</button>
                 `;
-
-                listaDeProdutosNovos.appendChild(item);
+                listaProdutos.appendChild(item);
             });
-
-            // Adicionando o evento ao botão de edição após o carregamento dos produtos
-            const botoesEditar = document.querySelectorAll('.editar-produto');
-            botoesEditar.forEach(botao => {
-                botao.addEventListener('click', function() {
-                    // Recuperando o ID do produto ao clicar no botão
-                    const produtoId = this.getAttribute('data-id');
-                    if (produtoId) {
-                        abrirFormularioEdicao(produtoId); // Passa o ID diretamente
-                    } else {
-                        console.error("ID do produto não encontrado.");
-                    }
-                });
-            });
-
         })
         .catch(error => {
-            console.error("Erro ao carregar os produtos:", error);
-            alert("Erro ao carregar os produtos. Tente novamente mais tarde.");
+            console.error("Erro ao carregar produtos:", error);
+            alert("Erro ao carregar produtos. Tente novamente.");
         });
 }
-
-
-
 
 // Chamar a função para exibir os produtos quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
     exibirProdutos();
 });
 
+// Função para finalizar a compra
+function finalizarCompra() {
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+    const usuarioLogado = JSON.parse(localStorage.getItem(USUARIO_LOGADO_KEY));
+
+    if (carrinho.length === 0) {
+        alert("Seu carrinho está vazio.");
+        return;
+    }
+
+    if (!usuarioLogado) {
+        alert("Você precisa estar logado para finalizar a compra.");
+        return;
+    }
+
+    // Calcular o total da compra
+    const total = carrinho.reduce((acc, item) => acc + item.price * item.quantidade, 0);
+
+    // Criar o pedido
+    const pedido = {
+        id: Date.now(), // ID único para o pedido
+        itens: carrinho,
+        total: total,
+        usuario: usuarioLogado.email
+    };
+
+    // Enviar notificação via AfterShip
+    const mensagem = `Seu pedido #${pedido.id} foi confirmado. Total: R$ ${total.toFixed(2)}`;
+    enviarNotificacaoAfterShip(usuarioLogado.email, mensagem);
+
+    // Limpar o carrinho
+    localStorage.removeItem("carrinho");
+
+    // Feedback para o usuário
+    alert("Compra finalizada com sucesso! Uma notificação foi enviada para o seu e-mail.");
+    window.location.href = "catalogo.html"; // Redirecionar para o catálogo
+}
+
+// Função para exibir o carrinho
+function exibirCarrinho() {
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+    const listaCarrinho = document.getElementById("lista-carrinho");
+    const totalCarrinho = document.getElementById("total-carrinho");
+
+    listaCarrinho.innerHTML = ""; // Limpar a lista antes de exibir
+
+    let total = 0;
+
+    carrinho.forEach(item => {
+        const itemCarrinho = document.createElement("div");
+        itemCarrinho.innerHTML = `
+            <p>${item.title} - R$ ${item.price.toFixed(2)} x ${item.quantidade}</p>
+        `;
+        listaCarrinho.appendChild(itemCarrinho);
+        total += item.price * item.quantidade;
+    });
+
+    totalCarrinho.textContent = total.toFixed(2);
+}
+
+// Chamar a função para exibir o carrinho quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    exibirCarrinho();
+});
 
 // Função para abrir a página de edição do produto
 function abrirFormularioEdicao(produtoId) {
