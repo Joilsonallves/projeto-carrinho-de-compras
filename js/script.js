@@ -273,7 +273,9 @@ function adicionarAoCarrinho(id) {
     if (itemExistente) {
         itemExistente.quantidade += 1;
     } else {
-        carrinho.push({ ...produto, quantidade: 1 });
+        // Adiciona o e-mail do cliente ao item do carrinho
+        const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+        carrinho.push({ ...produto, quantidade: 1, clienteEmail: usuarioLogado.email });
     }
 
     salvarDados('carrinho', carrinho);
@@ -324,15 +326,23 @@ async function enviarEmail() {
         return;
     }
 
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
-    if (!usuarioLogado) {
-        alert('Usuário não logado. Não é possível enviar e-mail.');
+    const carrinho = carregarDados('carrinho');
+    if (carrinho.length === 0) {
+        alert('Carrinho vazio!');
+        return;
+    }
+
+    // Obtém o e-mail do cliente a partir do primeiro item do carrinho
+    const clienteEmail = carrinho[0].clienteEmail;
+
+    if (!clienteEmail) {
+        alert('E-mail do cliente não encontrado.');
         return;
     }
 
     const templateParams = {
-        to_name: usuarioLogado.usuario,
-        to_email: usuarioLogado.email,
+        to_name: 'Cliente', // Você pode personalizar o nome
+        to_email: clienteEmail,
         message: 'Sua compra foi finalizada com sucesso!'
     };
 
