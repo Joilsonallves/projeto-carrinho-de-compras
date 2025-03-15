@@ -1,5 +1,25 @@
-// Inicialização do EmailJS
-emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
+// Função para carregar o EmailJS dinamicamente
+function carregarEmailJS() {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+        script.onload = () => {
+            console.log('EmailJS carregado com sucesso!');
+            resolve();
+        };
+        script.onerror = () => {
+            console.error('Erro ao carregar EmailJS.');
+            reject();
+        };
+        document.head.appendChild(script);
+    });
+}
+
+// Inicializa o EmailJS após carregar o script
+async function inicializarEmailJS() {
+    await carregarEmailJS();
+    emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
+}
 
 // Função para carregar dados do localStorage
 function carregarDados(chave) {
@@ -296,7 +316,14 @@ function removerDoCarrinho(id) {
 }
 
 // Função para enviar e-mail
-function enviarEmail() {
+async function enviarEmail() {
+    try {
+        await inicializarEmailJS();
+    } catch (error) {
+        alert('Erro ao carregar EmailJS. Tente novamente.');
+        return;
+    }
+
     const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
     if (!usuarioLogado) {
         alert('Usuário não logado. Não é possível enviar e-mail.');
@@ -321,7 +348,7 @@ function enviarEmail() {
 }
 
 // Função para finalizar a compra
-function finalizarCompra() {
+async function finalizarCompra() {
     const carrinho = carregarDados('carrinho');
     if (carrinho.length === 0) {
         alert('Carrinho vazio!');
@@ -329,13 +356,14 @@ function finalizarCompra() {
     }
 
     // Enviar e-mail de notificação
-    enviarEmail();
+    await enviarEmail();
 
     // Limpar carrinho
     localStorage.removeItem('carrinho');
     exibirCarrinho();
     alert('Compra finalizada com sucesso! Notificação enviada.');
 }
+
 
 // Inicialização
 if (window.location.pathname.includes('paginas/painelAdmin.html')) {
