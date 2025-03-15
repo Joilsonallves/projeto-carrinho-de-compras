@@ -9,7 +9,7 @@ function carregarEmailJS() {
         };
         script.onerror = () => {
             console.error('Erro ao carregar EmailJS.');
-            reject();
+            reject(new Error('Erro ao carregar EmailJS.'));
         };
         document.head.appendChild(script);
     });
@@ -17,8 +17,13 @@ function carregarEmailJS() {
 
 // Inicializa o EmailJS após carregar o script
 async function inicializarEmailJS() {
-    await carregarEmailJS();
-    emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
+    try {
+        await carregarEmailJS();
+        emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
+    } catch (error) {
+        console.error('Erro ao inicializar EmailJS:', error);
+        throw error;
+    }
 }
 
 // Função para carregar dados do localStorage
@@ -373,7 +378,6 @@ async function finalizarCompra() {
     exibirCarrinho();
     alert('Compra finalizada com sucesso! Notificação enviada.');
 }
-
 
 // Inicialização
 if (window.location.pathname.includes('paginas/painelAdmin.html')) {
