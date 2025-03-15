@@ -1,4 +1,5 @@
-// script.js
+// Configuração do EmailJS
+emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
 
 // Função para carregar dados do localStorage
 function carregarDados(chave) {
@@ -302,10 +303,32 @@ function finalizarCompra() {
         return;
     }
 
-    // Simular envio de notificação (integrado com AfterShip)
-    alert('Compra finalizada com sucesso! Notificação enviada.');
+    // Enviar e-mail de notificação
+    enviarEmail();
+
+    // Limpar carrinho
     localStorage.removeItem('carrinho');
     exibirCarrinho();
+    alert('Compra finalizada com sucesso! Notificação enviada.');
+}
+
+// Função para enviar e-mail
+function enviarEmail() {
+    const templateParams = {
+        to_name: usuario,
+        to_email: email,
+        message: 'Sua compra foi finalizada com sucesso!'
+    };
+
+    emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
+        .then(response => {
+            console.log('E-mail enviado com sucesso!', response.status, response.text);
+            alert('Notificação enviada por e-mail!');
+        })
+        .catch(error => {
+            console.error('Erro ao enviar e-mail:', error);
+            alert('Erro ao enviar notificação.');
+        });
 }
 
 // Inicialização
