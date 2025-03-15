@@ -1,4 +1,4 @@
-// Configuração do EmailJS
+// Inicialização do EmailJS
 emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
 
 // Função para carregar dados do localStorage
@@ -295,6 +295,31 @@ function removerDoCarrinho(id) {
     exibirCarrinho();
 }
 
+// Função para enviar e-mail
+function enviarEmail() {
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+    if (!usuarioLogado) {
+        alert('Usuário não logado. Não é possível enviar e-mail.');
+        return;
+    }
+
+    const templateParams = {
+        to_name: usuarioLogado.usuario,
+        to_email: usuarioLogado.email,
+        message: 'Sua compra foi finalizada com sucesso!'
+    };
+
+    emailjs.send('service_12345', 'template_12345', templateParams) // Substitua pelo seu Service ID e Template ID
+        .then(response => {
+            console.log('E-mail enviado com sucesso!', response.status, response.text);
+            alert('Notificação enviada por e-mail!');
+        })
+        .catch(error => {
+            console.error('Erro ao enviar e-mail:', error);
+            alert('Erro ao enviar notificação.');
+        });
+}
+
 // Função para finalizar a compra
 function finalizarCompra() {
     const carrinho = carregarDados('carrinho');
@@ -310,25 +335,6 @@ function finalizarCompra() {
     localStorage.removeItem('carrinho');
     exibirCarrinho();
     alert('Compra finalizada com sucesso! Notificação enviada.');
-}
-
-// Função para enviar e-mail
-function enviarEmail() {
-    const templateParams = {
-        to_name: usuario,
-        to_email: email,
-        message: 'Sua compra foi finalizada com sucesso!'
-    };
-
-    emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
-        .then(response => {
-            console.log('E-mail enviado com sucesso!', response.status, response.text);
-            alert('Notificação enviada por e-mail!');
-        })
-        .catch(error => {
-            console.error('Erro ao enviar e-mail:', error);
-            alert('Erro ao enviar notificação.');
-        });
 }
 
 // Inicialização
