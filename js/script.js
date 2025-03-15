@@ -78,12 +78,15 @@ function efetuarLogin() {
     const usuarioLogado = usuarios.find(u => u.usuario === usuario && u.senha === senha);
     if (usuarioLogado) {
         alert('Login efetuado com sucesso!');
-        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
 
-        // Redirecionar conforme o cargo
+        // Salvar o usuário logado no localStorage com chaves diferentes
         if (usuarioLogado.cargo === 'administrador') {
+            localStorage.setItem('usuarioLogadoAdmin', JSON.stringify(usuarioLogado));
+            localStorage.removeItem('usuarioLogadoCliente'); // Limpar cliente, se existir
             window.location.href = 'paginas/painelAdmin.html'; // Painel de administração
         } else {
+            localStorage.setItem('usuarioLogadoCliente', JSON.stringify(usuarioLogado));
+            localStorage.removeItem('usuarioLogadoAdmin'); // Limpar admin, se existir
             window.location.href = 'paginas/catalogo.html'; // Catálogo de produtos
         }
     } else {
@@ -275,12 +278,18 @@ function adicionarAoCarrinho(id) {
     const carrinho = carregarDados('carrinho');
     const itemExistente = carrinho.find(item => item.id === id);
 
+    // Obtém o e-mail do cliente logado
+    const usuarioLogadoCliente = JSON.parse(localStorage.getItem('usuarioLogadoCliente'));
+    if (!usuarioLogadoCliente) {
+        alert('Cliente não está logado!');
+        return;
+    }
+
     if (itemExistente) {
         itemExistente.quantidade += 1;
     } else {
         // Adiciona o e-mail do cliente ao item do carrinho
-        const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
-        carrinho.push({ ...produto, quantidade: 1, clienteEmail: usuarioLogado.email });
+        carrinho.push({ ...produto, quantidade: 1, clienteEmail: usuarioLogadoCliente.email });
     }
 
     salvarDados('carrinho', carrinho);
