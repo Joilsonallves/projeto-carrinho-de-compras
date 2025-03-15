@@ -280,7 +280,7 @@ function adicionarAoCarrinho(id) {
     } else {
         // Adiciona o e-mail do cliente ao item do carrinho
         const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
-        carrinho.push({ ...produto, quantidade: 1, clienteEmail: usuarioLogado.email });
+        carrinho.push({ ...produto, quantidade: 1, clienteEmail: usuarioLogadoCliente.email });
     }
 
     salvarDados('carrinho', carrinho);
