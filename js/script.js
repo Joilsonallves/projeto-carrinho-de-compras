@@ -9,7 +9,7 @@ function carregarEmailJS() {
         };
         script.onerror = () => {
             console.error('Erro ao carregar EmailJS.');
-            reject();
+            reject(new Error('Erro ao carregar EmailJS.'));
         };
         document.head.appendChild(script);
     });
@@ -17,8 +17,13 @@ function carregarEmailJS() {
 
 // Inicializa o EmailJS após carregar o script
 async function inicializarEmailJS() {
-    await carregarEmailJS();
-    emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
+    try {
+        await carregarEmailJS();
+        emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
+    } catch (error) {
+        console.error('Erro ao inicializar EmailJS:', error);
+        throw error;
+    }
 }
 
 // Função para carregar dados do localStorage
@@ -73,12 +78,12 @@ function efetuarLogin() {
     const usuarioLogado = usuarios.find(u => u.usuario === usuario && u.senha === senha);
     if (usuarioLogado) {
         alert('Login efetuado com sucesso!');
-        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
-
         // Redirecionar conforme o cargo
         if (usuarioLogado.cargo === 'administrador') {
+            localStorage.setItem('usuarioLogadoAdmin', JSON.stringify(usuarioLogado));
             window.location.href = 'paginas/painelAdmin.html'; // Painel de administração
         } else {
+            localStorage.setItem('usuarioLogadoCliente', JSON.stringify(usuarioLogado));
             window.location.href = 'paginas/catalogo.html'; // Catálogo de produtos
         }
     } else {
@@ -373,7 +378,6 @@ async function finalizarCompra() {
     exibirCarrinho();
     alert('Compra finalizada com sucesso! Notificação enviada.');
 }
-
 
 // Inicialização
 if (window.location.pathname.includes('paginas/painelAdmin.html')) {
