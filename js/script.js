@@ -348,6 +348,7 @@ async function enviarEmail() {
 
     // Obtém o e-mail do cliente a partir do primeiro item do carrinho
     const clienteEmail = carrinho[0].clienteEmail;
+    console.log(clienteEmail);
 
     if (!clienteEmail) {
         alert('E-mail do cliente não encontrado.');
