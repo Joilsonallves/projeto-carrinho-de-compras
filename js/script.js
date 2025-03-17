@@ -361,7 +361,7 @@ async function enviarEmail() {
         message: 'Sua compra foi finalizada com sucesso!'
     };
 
-    emailjs.send('service_hqb1eid', 'template_2cvpckf', templateParams) // Substitua pelo seu Service ID e Template ID
+    emailjs.send('service_g2117mu', 'template_2cvpckf', templateParams) // Substitua pelo seu Service ID e Template ID
         .then(response => {
             console.log('E-mail enviado com sucesso!', response.status, response.text);
             alert('Notificação enviada por e-mail!');
