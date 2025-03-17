@@ -1,4 +1,4 @@
-// Função para carregar o EmailJS dinamicamente
+// Função para carregar o EmailJS
 function carregarEmailJS() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -15,11 +15,11 @@ function carregarEmailJS() {
     });
 }
 
-// Inicializa o EmailJS após carregar o script
+// Inicializa o EmailJS
 async function inicializarEmailJS() {
     try {
         await carregarEmailJS();
-        emailjs.init('fVYL5gjVvG4xj8HM2'); // Substitua pela sua chave pública do EmailJS
+        emailjs.init('fVYL5gjVvG4xj8HM2');
     } catch (error) {
         console.error('Erro ao inicializar EmailJS:', error);
         throw error;
@@ -52,19 +52,19 @@ function registrarUsuario() {
 
     const usuarios = carregarDados('usuarios');
 
-    // Verificar se o usuário já existe
+    // Verifica se o usuário já existe
     const usuarioExistente = usuarios.find(u => u.usuario === usuario);
     if (usuarioExistente) {
         alert('Usuário já cadastrado!');
         return;
     }
 
-    // Adicionar novo usuário
+    // Adiciona novo usuário
     usuarios.push({ usuario, email, senha, cargo });
     salvarDados('usuarios', usuarios);
 
     alert('Usuário registrado com sucesso!');
-    window.location.href = '../index.html'; // Redirecionar para a página de login
+    window.location.href = '../index.html';
 }
 
 // Função para efetuar login
@@ -74,20 +74,18 @@ function efetuarLogin() {
 
     const usuarios = carregarDados('usuarios');
 
-    // Verificar se o usuário e senha estão corretos
     const usuarioLogado = usuarios.find(u => u.usuario === usuario && u.senha === senha);
     if (usuarioLogado) {
         alert('Login efetuado com sucesso!');
 
-        // Salvar o usuário logado no localStorage com chaves diferentes
         if (usuarioLogado.cargo === 'administrador') {
             localStorage.setItem('usuarioLogadoAdmin', JSON.stringify(usuarioLogado));
-            localStorage.removeItem('usuarioLogadoCliente'); // Limpar cliente, se existir
-            window.location.href = 'paginas/painelAdmin.html'; // Painel de administração
+            localStorage.removeItem('usuarioLogadoCliente');
+            window.location.href = 'paginas/painelAdmin.html';
         } else {
             localStorage.setItem('usuarioLogadoCliente', JSON.stringify(usuarioLogado));
-            localStorage.removeItem('usuarioLogadoAdmin'); // Limpar admin, se existir
-            window.location.href = 'paginas/catalogo.html'; // Catálogo de produtos
+            localStorage.removeItem('usuarioLogadoAdmin');
+            window.location.href = 'paginas/catalogo.html';
         }
     } else {
         alert('Usuário ou senha incorretos!');
@@ -124,7 +122,7 @@ function adicionarProduto() {
 
     const produtos = carregarDados('produtos');
     const novoProduto = {
-        id: Date.now(), // Usar timestamp para garantir IDs únicos
+        id: Date.now(),
         nome,
         descricao,
         preco,
@@ -134,10 +132,9 @@ function adicionarProduto() {
     produtos.push(novoProduto);
     salvarDados('produtos', produtos);
     alert('Produto adicionado com sucesso!');
-    carregarListaDeProdutos(); // Atualizar a lista de produtos no painel admin
+    carregarListaDeProdutos();
 }
 
-// Função para carregar a lista de produtos no painel de administração
 function carregarListaDeProdutos() {
     const produtos = carregarDados('produtos');
     const listaDeProdutosNovos = document.getElementById('listaDeProdutosNovos');
@@ -172,7 +169,6 @@ function editarProduto(id) {
         return;
     }
 
-    // Criar formulário de edição
     const formularioEdicao = document.createElement('div');
     formularioEdicao.innerHTML = `
         <h3>Editar Produto</h3>
@@ -217,7 +213,7 @@ function salvarEdicao(id) {
         return;
     }
 
-    // Atualizar os dados do produto
+    // Atualiza os dados do produto
     produtos[produtoIndex] = {
         ...produtos[produtoIndex],
         nome,
@@ -228,12 +224,12 @@ function salvarEdicao(id) {
 
     salvarDados('produtos', produtos);
     alert('Produto atualizado com sucesso!');
-    carregarListaDeProdutos(); // Atualizar a lista de produtos
+    carregarListaDeProdutos();
 }
 
 // Função para cancelar a edição
 function cancelarEdicao() {
-    carregarListaDeProdutos(); // Voltar à exibição normal da lista de produtos
+    carregarListaDeProdutos();
 }
 
 // Função para remover um produto
@@ -241,7 +237,7 @@ function removerProduto(id) {
     let produtos = carregarDados('produtos');
     produtos = produtos.filter(produto => produto.id !== id);
     salvarDados('produtos', produtos);
-    carregarListaDeProdutos(); // Atualizar a lista de produtos
+    carregarListaDeProdutos();
 }
 
 // Função para carregar o catálogo de produtos
@@ -356,14 +352,14 @@ async function enviarEmail() {
     }
 
     const templateParams = {
-        to_name: 'Cliente', // Você pode personalizar o nome
+        to_name: 'Cliente',
         to_email: clienteEmail,
         message: 'Sua compra foi finalizada com sucesso!'
     };
 
     console.log('Template Params:', templateParams);
 
-    emailjs.send('service_hqb1eid', 'template_2cvpckf', templateParams) // Substitua pelo seu Service ID e Template ID
+    emailjs.send('service_hqb1eid', 'template_2cvpckf', templateParams)
         .then(response => {
             console.log('E-mail enviado com sucesso!', response.status, response.text);
             alert('Notificação enviada por e-mail!');
